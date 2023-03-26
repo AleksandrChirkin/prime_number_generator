@@ -21,10 +21,13 @@ class Generator:
             R = 2
             while R < 4 * (q + 1):
                 N = q * R + 1
-                if 2 ** (N - 1) % N == 1 and 2 ** ((N - 1) / q) != 1:
+                first_decree = N - 1
+                second_decree = int(first_decree / q)
+                if pow(2, first_decree, N) == 1 and (first_decree % second_decree == 0 or
+                                                     pow(2, second_decree, N) != 1):
                     try:
-                        Certificate.objects.get_or_create(N=str(N), a=2, q=str(q))
-                        logging.info(f'Added certificate ({N}, 2, {q})')
+                        Certificate.objects.get_or_create(N=N, a=2, q=q)
+                        logging.info(f'({N}, 2, {q})')
                     except IntegrityError:
                         pass
                 elif self.brute_force_check(N):

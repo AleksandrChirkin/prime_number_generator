@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
 
 import logging
 import os
@@ -19,9 +18,10 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    if 'runserver' in sys.argv:
-        msg_format = "%(asctime)s: %(message)s"
-        logging.basicConfig(format=msg_format, level=logging.INFO, datefmt="%H:%M:%S")
+    # избегаем двойного запуска генератора
+    procs = [(int(p), c) for p, c in [x.rstrip('\n').split(' ', 1) for x in os.popen('ps h -eo pid:1,command')]]
+    if len([proc for proc in procs if str(proc[1]).endswith('manage.py runserver 8000')]) == 1:
+        logging.basicConfig(format='%(message)s', level=logging.INFO, stream=sys.stdout)
         generator_thread = threading.Thread(target=Generator().generate)
         logging.info("Starting generator...")
         generator_thread.start()
