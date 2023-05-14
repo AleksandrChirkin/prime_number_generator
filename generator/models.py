@@ -11,4 +11,4 @@ class Certificate(models.Model):
     q = models.PositiveBigIntegerField()
 
     def __repr__(self):
-        return f'\n{self.id}. ({self.N}, {self.a}, {self.q})'
+        return f'({self.N}, {self.a}, {self.q})'

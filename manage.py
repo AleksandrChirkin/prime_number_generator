@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import logging
 import os
@@ -6,9 +6,18 @@ import sys
 import threading
 
 from generator import Generator
+from signal import signal, SIGTERM
+
+
+def signal_handler(signum, frame):
+    sys.stdout.close()
 
 
 def main():
+    signal(SIGTERM, signal_handler)
+    if 'runserver' in sys.argv:
+        sys.stdout = open('generatorOutput.log', mode='a+')
+        sys.stderr = sys.stdout
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'prime_numbers_generator.settings')
     try:
         from django.core.management import execute_from_command_line
