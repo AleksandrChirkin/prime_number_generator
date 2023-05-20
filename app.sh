@@ -1,3 +1,4 @@
+sudo apt install python3-django
 if [ ! -f "db.sqlite3" ]; then
   rm generator/migrations/*_initial.py
   python3 manage.py migrate
