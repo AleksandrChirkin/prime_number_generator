@@ -1,4 +1,5 @@
 @echo OFF
+pip install -r requirements.txt
 IF NOT EXIST "secret_key.txt" (
     python generate_secret.py
 )

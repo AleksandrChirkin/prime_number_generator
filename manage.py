@@ -19,17 +19,14 @@ def start_generator() -> None:
     """Запустить генератор сертификатов"""
     logging.basicConfig(format='%(message)s', level=logging.INFO, stream=sys.stdout)
     generator_thread = threading.Thread(target=Generator().generate)
-    logging.info("Starting generator...")
+    logging.info("Запускаем генератор...")
     generator_thread.start()
-    logging.info("Generator started!")
+    logging.info("Генератор запущен!")
 
 
 def main() -> None:
     """Запуск Django-приложения"""
     signal(SIGTERM, signal_handler)
-    if 'runserver' in sys.argv:
-        sys.stdout = open('generatorOutput.log', mode='a+')
-        sys.stderr = sys.stdout
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'prime_numbers_generator.settings')
     try:
         from django.core.management import execute_from_command_line
@@ -39,7 +36,10 @@ def main() -> None:
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    start_generator()
+    if 'runserver' in sys.argv:
+        sys.stdout = open('generatorOutput.log', mode='a+')
+        sys.stderr = sys.stdout
+        start_generator()
     execute_from_command_line(sys.argv)
 
 
