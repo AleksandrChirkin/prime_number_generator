@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru-RU">
+<head>
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <title>Статистика генератора</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<b>Сертификатов сгенерировано:</b> {{ last_generated.id }}<br>
+<b>Последнее сертифицированное число:</b> {{ last_generated.N }} <i>(его сертификат: {{ last_generated_cert }})</i><br>
+<b>Наибольшее сертифицированное число:</b> {{ largest_generated.N }} <i>(его сертификат: {{ largest_generated_cert }}))</i><br>
+<b>Количество чисел, сертифицированных не двойкой:</b> {{ certified_not_by_2 }}
+<form action="/generator/list">
+    <button>Получить все сертификаты (может занять большое время)</button>
+</form>
+<form id="checker" action="/generator/check">
+    <input type="number" name="checked_num" placeholder="Введите число, которое нужно проверить на простоту"/>
+    <input type="submit" value="Проверить"/>
+    <output id="check_result"></output>
+</form>
+<script>
+    $("#checker").submit(function (event){
+        event.preventDefault();
+        var $form = $( this ),
+            checked_num = $form.find('input[name="checked_num"]').val(),
+            url = $form.attr('action');
+        var posting = $.post( url, { checked_num: checked_num });
+        posting.done(function (data) {
+            $( "#check_result" ).empty().append( data );
+        });
+        posting.fail(function (){
+            $( "#check_result" ).empty().append("Произошла ошибка!");
+        })
+    })
+</script>
+</body>
+</html>
