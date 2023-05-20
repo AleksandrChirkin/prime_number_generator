@@ -1,6 +1,5 @@
-if [ ! -f "backup_params.txt" ]; then
+if [ ! -f "db.sqlite3" ]; then
   rm generator/migrations/*_initial.py
-  rm db.sqlite3*
   python3 manage.py migrate
   python3 manage.py makemigrations generator
   python3 manage.py sqlmigrate generator 0001
