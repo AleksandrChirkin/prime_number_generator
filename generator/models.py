@@ -6,9 +6,10 @@ from django.db import models
 
 
 class Certificate(models.Model):
+    """Модель сертификата простоты для хранения в базе данных"""
     N = models.PositiveBigIntegerField(unique=True)
     a = models.PositiveIntegerField()
     q = models.PositiveBigIntegerField()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'({self.N}, {self.a}, {self.q})'

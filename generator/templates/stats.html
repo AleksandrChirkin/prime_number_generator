@@ -6,6 +6,7 @@
     <meta charset="utf-8">
 </head>
 <body>
+<h1>Генератор сертификатов простоты по теореме Диемитко</h1>
 <b>Сертификатов сгенерировано:</b> {{ last_generated.id }}<br>
 <b>Последнее сертифицированное число:</b> {{ last_generated.N }} <i>(его сертификат: {{ last_generated_cert }})</i><br>
 <b>Наибольшее сертифицированное число:</b> {{ largest_generated.N }} <i>(его сертификат: {{ largest_generated_cert }}))</i><br>
@@ -14,7 +15,7 @@
     <button>Получить все сертификаты (может занять большое время)</button>
 </form>
 <form id="checker" action="/generator/check">
-    <input type="number" name="checked_num" placeholder="Введите число, которое нужно проверить на простоту"/>
+    <input type="number" min="1" name="checked_num" placeholder="Введите число, которое нужно проверить на простоту"/>
     <input type="submit" value="Проверить"/>
     <output id="check_result"></output>
 </form>
@@ -33,5 +34,6 @@
         })
     })
 </script>
+<b>Для обновления статистики обновите страницу</b>
 </body>
 </html>
