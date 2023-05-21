@@ -1,4 +1,4 @@
-sudo apt install python3-django
+sudo pip3 install -r requirements.txt
 if [ ! -f "secret_key.txt" ]; then
   python3 generate_secret.py
 fi
