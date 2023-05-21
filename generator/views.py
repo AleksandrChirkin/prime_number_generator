@@ -3,6 +3,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal, getcontext, MAX_PREC, Overflow
 # класс сертификата добавляется не сразу, а только после инициализации СУБД
 while True:
     try:
@@ -33,11 +34,45 @@ def check(request: WSGIRequest) -> HttpResponse:
     """Проверить число на простоту"""
     if request.method == 'POST':
         N = request.POST['checked_num']
+        if N == '2' or N == '3':
+            return HttpResponse(f'{N} простое, но не сертифицируемое по теореме Диемитко!')
         try:
             return HttpResponse(f'{N} простое! Его сертификат: {repr(Certificate.objects.filter(N__exact=N)[0])}')
         except IndexError:  # если не нашлось сертификата
             return HttpResponse(
                 f'Число {N} не является простым! (или сертификат простоты для него еще не был сгенерирован)')
+    return HttpResponseNotAllowed('Только POST-метод разрешен для проведения проверки')
+
+
+@csrf_exempt
+def chain_generation(request: WSGIRequest) -> HttpResponse:
+    """Быстрое получение больших простых чисел"""
+    if request.method == 'POST':
+        getcontext().prec = MAX_PREC
+        result = []
+        root_num = request.POST['root_num']
+        try:
+            Certificate.objects.filter(N__exact=root_num)[0]
+        except IndexError:  # если не нашлось сертификата
+            return HttpResponse(
+                f'Число {root_num} не является простым! (или сертификат простоты для него еще не был сгенерирован)')
+        q = Decimal(root_num)
+        try:
+            while len(result) < 100:
+                R = Decimal(2)
+                while R < 4 * (q + 1):
+                    N = q * R + 1
+                    first_decree = N - 1
+                    second_decree = int(first_decree / q)
+                    if pow(2, first_decree, N) == 1 and (first_decree % second_decree == 0 or
+                                                            pow(2, second_decree, N) != 1):
+                        result.append(str(N))
+                        q = N
+                        break
+                    R += 2
+        except Overflow:
+            pass
+        return HttpResponse('<br>'.join(result))
     return HttpResponseNotAllowed('Только POST-метод разрешен для проведения проверки')
 
 

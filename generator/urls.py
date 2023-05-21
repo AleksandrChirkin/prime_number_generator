@@ -6,5 +6,6 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('check', views.check, name='check'),
-    path('list', views.certificates_list, name='list')
+    path('list', views.certificates_list, name='list'),
+    path('chain_generation', views.chain_generation, name='chain_generation')
 ]

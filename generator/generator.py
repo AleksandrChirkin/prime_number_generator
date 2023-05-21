@@ -25,10 +25,11 @@ class Generator:
             # определить, какое следующее простое число брать в качестве q
             recovered = True # признак того, что приложение восстановилось в состояние на момент его последнего завершения
             # необходим для избежания повторных вычислений степеней двойки для всех R, начиная с 2
-        except IndexError:  # если в БД ничего нет
+        except (IndexError, Certificate.DoesNotExist):  # если в БД ничего нет
             # добавляем "2" в БД, чтобы потом можно было с ее помощью генерировать недостающие простые числа
             Certificate.objects.get_or_create(N=2, a=2, q=1)
-            q = 1
+            Certificate.objects.get_or_create(N=3, a=2, q=1)
+            q = 2
             R = 2
             cert_id = 1
         while True:
@@ -42,22 +43,21 @@ class Generator:
                 second_decree = int(first_decree / q)
                 if self.brute_force_check(N):  # проверяем грубой силой, что позволит быстро отклонить предположение о
                     # простоте для многих чисел
-                    prime_num_id = 0
+                    a = 2
                     while True:  # перебираем все возможные значения a
-                        prime_num = Certificate.objects.all()[prime_num_id]
-                        if pow(prime_num.N, first_decree, N) == 1 and (first_decree % second_decree == 0 or
-                                                                       pow(prime_num.N, second_decree, N) != 1):
+                        if pow(a, first_decree, N) == 1 and (first_decree % second_decree == 0 or
+                                                                       pow(a, second_decree, N) != 1):
                             # условие теоремы Диемитко выполнилось
                             while True:
                                 try:
-                                    Certificate.objects.get_or_create(N=N, a=prime_num.N, q=q)
+                                    Certificate.objects.get_or_create(N=N, a=a, q=q)
                                     break
                                 except OperationalError:  # транзакция провалилась, пытаемся сделать ее снова
                                     continue
                                 except IntegrityError:  # нашли в БД уже существующий сертификат для этого числа
                                     break
                             break
-                        prime_num_id += 1
+                        a += 1
                 R += 2
             # получить следующее простое число из БД и приравнять к нему q
             cert_id += 1

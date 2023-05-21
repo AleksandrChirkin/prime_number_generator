@@ -14,10 +14,18 @@
 <form action="/generator/list">
     <button>Получить все сертификаты (может занять большое время)</button>
 </form>
+<b>Проверить число на простоту:</b>
 <form id="checker" action="/generator/check">
     <input type="number" min="1" name="checked_num" placeholder="Введите число, которое нужно проверить на простоту"/>
     <input type="submit" value="Проверить"/>
     <output id="check_result"></output>
+</form>
+<br>
+<b>Сгенерировать цепочку простых чисел</b>
+<form id="chain_generator" action="/generator/chain_generation">
+    <input type="number" min="1" name="root_num" placeholder="Введите число"/>
+    <input type="submit" value="Сгенерировать 100 простых чисел (займет некоторое время)"/><br>
+    <output id="chain"></output>
 </form>
 <script>
     $("#checker").submit(function (event){
@@ -31,6 +39,19 @@
         });
         posting.fail(function (){
             $( "#check_result" ).empty().append("Произошла ошибка!");
+        })
+    })
+    $("#chain_generator").submit(function (event){
+        event.preventDefault();
+        var $form = $( this ),
+            root_num = $form.find('input[name="root_num"]').val(),
+            url = $form.attr('action');
+        var posting = $.post( url, { root_num });
+        posting.done(function (data) {
+            $( "#chain" ).empty().append( data );
+        });
+        posting.fail(function (){
+            $( "#chain" ).empty().append("Произошла ошибка!");
         })
     })
 </script>
