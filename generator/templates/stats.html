@@ -28,6 +28,18 @@
     <output id="chain"></output>
 </form>
 <script>
+    function chain(root_num, url) {
+        var posting = $.post( url, { root_num });
+        posting.done(function (data) {
+            $( "#chain" ).append( data );
+            if (data !== 'Overflow') {
+                chain(data, url);
+            }
+        });
+        posting.fail(function (){
+            $( "#chain" ).append("Произошла ошибка!");
+        })
+    }
     $("#checker").submit(function (event){
         event.preventDefault();
         var $form = $( this ),
@@ -43,16 +55,11 @@
     })
     $("#chain_generator").submit(function (event){
         event.preventDefault();
+        $( "#chain" ).empty();
         var $form = $( this ),
             root_num = $form.find('input[name="root_num"]').val(),
             url = $form.attr('action');
-        var posting = $.post( url, { root_num });
-        posting.done(function (data) {
-            $( "#chain" ).empty().append( data );
-        });
-        posting.fail(function (){
-            $( "#chain" ).empty().append("Произошла ошибка!");
-        })
+        chain(root_num, url);
     })
 </script>
 <b>Для обновления статистики обновите страницу</b>

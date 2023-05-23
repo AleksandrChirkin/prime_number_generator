@@ -1,18 +1,21 @@
+from decimal import Decimal, getcontext, Overflow, ROUND_UP
 from django.core.exceptions import AppRegistryNotReady
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from decimal import Decimal, getcontext, MAX_PREC, Overflow
+from psutil import virtual_memory
+from random import uniform
+import math
+import sys
 # класс сертификата добавляется не сразу, а только после инициализации СУБД
 while True:
     try:
         from .models import Certificate
-
         break
     except AppRegistryNotReady:
         continue
-
+mem = virtual_memory()
 
 def index(request: WSGIRequest) -> HttpResponse:
     """Главная страница генератора"""
@@ -48,32 +51,55 @@ def check(request: WSGIRequest) -> HttpResponse:
 def chain_generation(request: WSGIRequest) -> HttpResponse:
     """Быстрое получение больших простых чисел"""
     if request.method == 'POST':
-        getcontext().prec = MAX_PREC
-        result = []
-        root_num = request.POST['root_num']
+        global mem
+        post_split = request.POST['root_num'].split('(')
+        if len(post_split) == 1:
+            root_num = int(post_split[0])
+            try:
+                Certificate.objects.filter(N__exact=root_num)[0]
+            except IndexError:  # если не нашлось сертификата
+                return HttpResponse(
+                    f'Число {root_num} не является простым! (или сертификат простоты для него еще не был сгенерирован)')
+        float_size = sys.getsizeof(float)
+        getcontext().prec = float_size
+        q = Decimal(post_split[0])
+        two = Decimal(2)
+        t = two * get_binary_len(q)
         try:
-            Certificate.objects.filter(N__exact=root_num)[0]
-        except IndexError:  # если не нашлось сертификата
-            return HttpResponse(
-                f'Число {root_num} не является простым! (или сертификат простоты для него еще не был сгенерирован)')
-        q = Decimal(root_num)
-        try:
-            while len(result) < 100:
-                R = Decimal(2)
-                while R < 4 * (q + 1):
-                    N = q * R + 1
-                    first_decree = N - 1
-                    second_decree = int(first_decree / q)
-                    if pow(2, first_decree, N) == 1 and (first_decree % second_decree == 0 or
-                                                            pow(2, second_decree, N) != 1):
-                        result.append(str(N))
-                        q = N
+            while True:
+                getcontext().prec = float_size
+                xi = Decimal(uniform(0, 1))
+                getcontext().prec = int(get_int_part((t - 1) * Decimal(math.log10(2)))) + 1
+                degree = two ** (t - 1)
+                N = get_int_part(degree / q) + get_int_part((degree * xi) / q)
+                if N % 2 == 1:
+                    N += 1
+                u = 0
+                while True:
+                    p = (N + u) * q + 1  # кандидат в простые
+                    # для вычисления степеней двойки выделяем половину от свободной ОП вычислительной машины
+                    getcontext().prec = int(mem.available / 2)
+                    if p > two ** t:
                         break
-                    R += 2
+                    if two.__pow__(p - 1, p) == 1 and two.__pow__(N + u, p) != 1:
+                        return HttpResponse(f'{p} ({get_binary_len(p)} бит)<br>')
+                    u += 2
         except Overflow:
-            pass
-        return HttpResponse('<br>'.join(result))
+            return HttpResponse('Overflow')
     return HttpResponseNotAllowed('Только POST-метод разрешен для проведения проверки')
+
+
+def get_binary_len(q: Decimal) -> int:
+    getcontext().prec = len(str(q))
+    result = ''
+    while get_int_part(q) > 0:
+        result = f'{q % 2}' + result
+        q = get_int_part(q / 2)
+    return len(result)
+
+
+def get_int_part(original_decimal: Decimal) -> Decimal:
+    return Decimal(str(original_decimal).split('.')[0])
 
 
 def certificates_list(request: WSGIRequest) -> HttpResponse:

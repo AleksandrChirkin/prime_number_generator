@@ -18,7 +18,11 @@ class Generator:
         recovered = False
         certs = Certificate.objects.order_by('-id')
         try:
-            last_cert = certs[0] # получаем последний сертификат
+            i = 0
+            last_cert = certs[i] # получаем последний сертификат
+            while (last_cert.N == 5 and last_cert.id != 3) or (last_cert.N == 7 and last_cert.id != 4):
+                i += 1
+                last_cert = certs[i]
             q = last_cert.q # восстанавливаем q и R
             R = int((last_cert.N - 1) / last_cert.q)
             cert_id = Certificate.objects.get(N=q).id # определяем id сертификата простоты для q, чтобы можно было
