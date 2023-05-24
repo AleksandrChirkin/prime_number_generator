@@ -16,9 +16,13 @@ while True:
     except AppRegistryNotReady:
         continue
 mem = virtual_memory()
+generating = False
+
 
 def index(request: WSGIRequest) -> HttpResponse:
     """Главная страница генератора"""
+    global generating
+    generating = False
     last_generated = Certificate.objects.order_by('-id')[0]
     largest_generated = Certificate.objects.order_by('-N')[0]
     certified_not_by_2 = Certificate.objects.filter(a__gt=2)
@@ -51,7 +55,7 @@ def check(request: WSGIRequest) -> HttpResponse:
 def chain_generation(request: WSGIRequest) -> HttpResponse:
     """Быстрое получение больших простых чисел"""
     if request.method == 'POST':
-        global mem
+        global mem, generating
         post_split = request.POST['root_num'].split('(')
         if len(post_split) == 1:
             root_num = int(post_split[0])
@@ -65,8 +69,9 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
         q = Decimal(post_split[0])
         two = Decimal(2)
         t = two * get_binary_len(q)
+        generating = True
         try:
-            while True:
+            while generating:
                 getcontext().prec = float_size
                 xi = Decimal(uniform(0, 1))
                 getcontext().prec = int(get_int_part((t - 1) * Decimal(math.log10(2)))) + 1
@@ -75,7 +80,7 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
                 if N % 2 == 1:
                     N += 1
                 u = 0
-                while True:
+                while generating:
                     p = (N + u) * q + 1  # кандидат в простые
                     # для вычисления степеней двойки выделяем половину от свободной ОП вычислительной машины
                     getcontext().prec = int(mem.available / 2)
@@ -86,7 +91,8 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
                     u += 2
         except Overflow:
             return HttpResponse('Overflow')
-    return HttpResponseNotAllowed('Только POST-метод разрешен для проведения проверки')
+    return HttpResponseNotAllowed('Только POST-метод разрешен для проведения проверки') if generating\
+        else HttpResponse()
 
 
 def get_binary_len(q: Decimal) -> int:
@@ -100,6 +106,12 @@ def get_binary_len(q: Decimal) -> int:
 
 def get_int_part(original_decimal: Decimal) -> Decimal:
     return Decimal(str(original_decimal).split('.')[0])
+
+
+def terminate_chain_generation(request: WSGIRequest) -> HttpResponse:
+    global generating
+    generating = False
+    return HttpResponse('Генерация прервана<br>')
 
 
 def certificates_list(request: WSGIRequest) -> HttpResponse:

@@ -10,7 +10,7 @@ with open('secret_key.txt') as secret_file:
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost']
 
 INSTALLED_APPS = [
     'generator.apps.GeneratorConfig',

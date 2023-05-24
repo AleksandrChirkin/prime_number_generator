@@ -24,20 +24,30 @@
 <b>Сгенерировать цепочку простых чисел</b>
 <form id="chain_generator" action="/generator/chain_generation">
     <input type="number" min="1" name="root_num" placeholder="Введите число"/>
-    <input type="submit" value="Сгенерировать 100 простых чисел (займет некоторое время)"/><br>
-    <output id="chain"></output>
+    <input type="submit" value="Сгенерировать цепочку простых чисел (займет некоторое время)"/>
 </form>
+<button type="submit" onclick="terminate()">Остановить генерацию</button><br>
+<output id="chain"></output>
 <script>
     function chain(root_num, url) {
         var posting = $.post( url, { root_num });
         posting.done(function (data) {
             $( "#chain" ).append( data );
-            if (data !== 'Overflow') {
+            if (data !== 'Overflow' && data !== '') {
                 chain(data, url);
             }
         });
         posting.fail(function (){
-            $( "#chain" ).append("Произошла ошибка!");
+            $( "#chain" ).append("Произошла ошибка!<br>");
+        })
+    }
+    function terminate(){
+        var termination = $.get( "/generator/terminate" );
+        termination.done(function (data) {
+            $( "#chain" ).append(data);
+        });
+        termination.fail(function () {
+            $( "#chain" ).append("Не удалось остановить генерацию! <br>");
         })
     }
     $("#checker").submit(function (event){
@@ -50,9 +60,9 @@
             $( "#check_result" ).empty().append( data );
         });
         posting.fail(function (){
-            $( "#check_result" ).empty().append("Произошла ошибка!");
-        })
-    })
+            $( "#check_result" ).empty().append("Произошла ошибка!<br>");
+        });
+    });
     $("#chain_generator").submit(function (event){
         event.preventDefault();
         $( "#chain" ).empty();
@@ -60,7 +70,7 @@
             root_num = $form.find('input[name="root_num"]').val(),
             url = $form.attr('action');
         chain(root_num, url);
-    })
+    });
 </script>
 <b>Для обновления статистики обновите страницу</b>
 </body>
