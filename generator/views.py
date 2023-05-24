@@ -110,8 +110,9 @@ def get_int_part(original_decimal: Decimal) -> Decimal:
 
 def terminate_chain_generation(request: WSGIRequest) -> HttpResponse:
     global generating
+    response_msg = 'Генерация прервана<br>' if generating else 'Прерывание не удалось, т.к. нет текущей генерации<br>'
     generating = False
-    return HttpResponse('Генерация прервана<br>')
+    return HttpResponse(response_msg)
 
 
 def certificates_list(request: WSGIRequest) -> HttpResponse:
