@@ -1,4 +1,4 @@
-from decimal import Decimal, getcontext, Overflow, ROUND_UP
+from decimal import Decimal, getcontext, Overflow
 from django.core.exceptions import AppRegistryNotReady
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
@@ -56,7 +56,7 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
     """Быстрое получение больших простых чисел"""
     if request.method == 'POST':
         global mem, generating
-        post_split = request.POST['root_num'].split('(')
+        post_split = request.POST['root_num'].replace('<b>', '').replace('</b>', '').split('(')
         if len(post_split) == 1:
             root_num = int(post_split[0])
             try:
@@ -68,7 +68,7 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
         getcontext().prec = float_size
         q = Decimal(post_split[0])
         two = Decimal(2)
-        t = two * get_binary_len(q)
+        t = two * len(get_binary(q))
         generating = True
         try:
             while generating:
@@ -87,7 +87,8 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
                     if p > two ** t:
                         break
                     if two.__pow__(p - 1, p) == 1 and two.__pow__(N + u, p) != 1:
-                        return HttpResponse(f'{p} ({get_binary_len(p)} бит)<br>')
+                        binary = get_binary(p)
+                        return HttpResponse(f'<b>{p}</b> ({binary}, {len(binary)} бит)<br>')
                     u += 2
         except Overflow:
             return HttpResponse('Overflow')
@@ -95,13 +96,13 @@ def chain_generation(request: WSGIRequest) -> HttpResponse:
         else HttpResponse()
 
 
-def get_binary_len(q: Decimal) -> int:
+def get_binary(q: Decimal) -> str:
     getcontext().prec = len(str(q))
     result = ''
     while get_int_part(q) > 0:
         result = f'{q % 2}' + result
         q = get_int_part(q / 2)
-    return len(result)
+    return result
 
 
 def get_int_part(original_decimal: Decimal) -> Decimal:
